@@ -1,0 +1,13 @@
+https://docs.blender.org/api/blender2.8/index.html
+
+【Blender/python】Blenderの自作アドオンの作り方（その３）
+https://rikoubou.hatenablog.com/entry/2018/04/19/101642
+
+[Blender×Python] アニメーションのつくりかた
+https://qiita.com/masterkeaton12/items/a6dcfa160f2bb6bc2851
+
+Blender：キーフレーム登録（Material）
+https://qiita.com/Bluewind1997/items/0248d018104e8fae7a67
+
+Scriptでkeyframeをいじる
+https://zenn.dev/kurogitsune/scraps/bc02ef7c0a3881
