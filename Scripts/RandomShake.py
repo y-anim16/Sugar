@@ -27,16 +27,17 @@ addon_keymaps = []
 class SetRandomShake(bpy.types.Operator):
     bl_idname = "object.random_shake"
     bl_label = "RandomShake"
-    bl_description = "ランダムシェイクを行いキーを打ちます"
+    bl_description = "指定フレーム数だけランダムシェイクを行いキーを打ちます"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        #bpy.ops.mesh.primitive_ico_sphere_add()
-        #print("サンプル 2-1: ICO球を生成しました。")
-
+        active_obj = context.active_object
+        oldLocation = [active_obj.location[0], active_obj.location[1], active_obj.location[2]]
+        oldRotation = [active_obj.rotation_euler[0], active_obj.rotation_euler[1], active_obj.rotation_euler[2]]
+        oldScale = [active_obj.scale[0], active_obj.scale[1], active_obj.scale[2]]
         currentFrame = bpy.context.scene.frame_current
 
-        for i in range(0, FRAME_COUNT):
+        for i in range(0, FRAME_COUNT - 1):
             bpy.context.scene.frame_set(currentFrame)
 
             #get random value
@@ -47,7 +48,9 @@ class SetRandomShake(bpy.types.Operator):
             #operate transform
             bpy.ops.transform.translate(value=(x, y, z))
             #TODO all axis
-            bpy.ops.transform.rotate(value=1, orient_axis='Z')
+            bpy.ops.transform.rotate(value=x, orient_axis='X')
+            bpy.ops.transform.rotate(value=y, orient_axis='Y')
+            bpy.ops.transform.rotate(value=z, orient_axis='Z')
             bpy.ops.transform.resize(value=(x, y, z))
 
             #insert keyframe (only active object)
@@ -59,6 +62,13 @@ class SetRandomShake(bpy.types.Operator):
 
             currentFrame += INTERVAL
 
+        bpy.context.scene.frame_set(currentFrame)
+        active_obj.location = oldLocation
+        active_obj.rotation_euler = oldRotation
+        active_obj.scale = oldScale
+        bpy.context.object.keyframe_insert(data_path="location", index=-1)
+        bpy.context.object.keyframe_insert(data_path="rotation_euler", index=-1)
+        bpy.context.object.keyframe_insert(data_path="scale", index=-1)
         return {'FINISHED'}
 
 def menu_fn(self, context):
