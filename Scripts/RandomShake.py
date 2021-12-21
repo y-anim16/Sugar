@@ -22,6 +22,8 @@ bl_info = {
     "category": "Object"
 }
 
+addon_keymaps = []
+
 class SetRandomShake(bpy.types.Operator):
     bl_idname = "object.random_shake"
     bl_label = "RandomShake"
@@ -67,14 +69,36 @@ classes = [
     SetRandomShake,
 ]
 
+def register_shortcut():
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    if kc:
+        km = kc.keymaps.new(name="3D View", space_type="VIEW_3D")
+        kmi = km.keymap_items.new(
+            idname=SetRandomShake.bl_idname,
+            type='I',
+            value = 'PRESS',
+            shift = True,
+            ctrl = True,
+            alt = False
+        )
+        addon_keymaps.append((km,kmi))
+
+def unregister_shortcut():
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.types.VIEW3D_MT_mesh_add.append(menu_fn)
+    register_shortcut()
     print("サンプル 1-5: アドオン『サンプル 1-5』が有効化されました。")
 
 
 def unregister():
+    unregister_shortcut()
     bpy.types.VIEW3D_MT_mesh_add.remove(menu_fn)
     for c in classes:
         bpy.utils.unregister_class(c)
