@@ -1,4 +1,5 @@
 import bpy
+from bpy.props import FloatProperty, BoolProperty, IntProperty
 
 from random import randint
 
@@ -70,12 +71,68 @@ class SetRandomShake(bpy.types.Operator):
         bpy.context.object.keyframe_insert(data_path="scale", index=-1)
         return {'FINISHED'}
 
+class RandomShakeUi(bpy.types.Panel):
+
+    bl_label = "RandomShake"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Sugar"
+    bl_context = "objectmode"
+
+    @classmethod
+    def poll(cls, context):
+        #オブジェクトが選択されているときのみ表示
+        for o in bpy.data.objects:
+            if o.type == 'MESH' and o.select_get():
+                return True
+        return False
+
+    def draw(self, context):
+        sc = context.scene
+        layout = self.layout
+        # layout.operator(
+        #     "hoge", text = "Insert Keys"
+        # )
+
+        layout.prop(sc, "FrameCount", text = "FrameCount")
+        layout.prop(sc, "movement", text = "movement")
+        layout.prop(sc, "InsertKey", text = "InsertKey")
+
+
 def menu_fn(self, context):
     self.layout.separator()
     self.layout.operator(SetRandomShake.bl_idname)
 
+def init_props():
+    sc = bpy.types.Scene
+
+    sc.movement = FloatProperty(
+        name = "movement",
+        description = "movement",
+        default = 1.0,
+        max = 5.0,
+        min = -5.0
+    )
+    sc.FrameCount = IntProperty(
+        name = "FrameCount",
+        description = "FrameCount",
+        default = 3,
+        max = 9999,
+        min = 1
+    )
+    sc.InsertKey = BoolProperty(
+        name = "InsertKey",
+        default = True
+    )
+
+def clear_props():
+    sc = bpy.types.Scene
+
+    del sc.movement
+
 classes = [
     SetRandomShake,
+    RandomShakeUi
 ]
 
 def register_shortcut():
@@ -101,13 +158,12 @@ def unregister_shortcut():
 def register():
     for c in classes:
         bpy.utils.register_class(c)
-    bpy.types.VIEW3D_MT_mesh_add.append(menu_fn)
+    init_props()
     register_shortcut()
-
 
 def unregister():
     unregister_shortcut()
-    bpy.types.VIEW3D_MT_mesh_add.remove(menu_fn)
+    clear_props()
     for c in classes:
         bpy.utils.unregister_class(c)
 
