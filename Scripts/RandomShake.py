@@ -47,7 +47,6 @@ class SetRandomShake(bpy.types.Operator):
 
             #operate transform
             bpy.ops.transform.translate(value=(x, y, z))
-            #TODO all axis
             bpy.ops.transform.rotate(value=x, orient_axis='X')
             bpy.ops.transform.rotate(value=y, orient_axis='Y')
             bpy.ops.transform.rotate(value=z, orient_axis='Z')
@@ -104,7 +103,6 @@ def register():
         bpy.utils.register_class(c)
     bpy.types.VIEW3D_MT_mesh_add.append(menu_fn)
     register_shortcut()
-    print("サンプル 1-5: アドオン『サンプル 1-5』が有効化されました。")
 
 
 def unregister():
@@ -112,8 +110,6 @@ def unregister():
     bpy.types.VIEW3D_MT_mesh_add.remove(menu_fn)
     for c in classes:
         bpy.utils.unregister_class(c)
-    print("サンプル 1-5: アドオン『サンプル 1-5』が無効化されました。")
-
 
 if __name__ == "__main__":
     register()
