@@ -1,6 +1,8 @@
 import bpy
-from bpy.props import FloatProperty, BoolProperty, IntProperty
-
+from bpy.props import (
+    IntProperty,
+    FloatVectorProperty,
+    BoolVectorProperty)
 from random import randint
 
 INTERVAL = 2
@@ -20,7 +22,7 @@ bl_info = {
     "support": "TESTING",
     "doc_url": "",
     "tracker_url": "",
-    "category": "Object"
+    "category": "Animation"
 }
 
 addon_keymaps = []
@@ -73,19 +75,12 @@ class SetRandomShake(bpy.types.Operator):
 
 class RandomShakeUi(bpy.types.Panel):
 
+    bl_idname = "object.random_shake_ui"
     bl_label = "RandomShake"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Sugar"
     bl_context = "objectmode"
-
-    @classmethod
-    def poll(cls, context):
-        #オブジェクトが選択されているときのみ表示
-        for o in bpy.data.objects:
-            if o.type == 'MESH' and o.select_get():
-                return True
-        return False
 
     def draw(self, context):
         sc = context.scene
@@ -93,10 +88,73 @@ class RandomShakeUi(bpy.types.Panel):
         # layout.operator(
         #     "hoge", text = "Insert Keys"
         # )
+        layout.prop(sc, "FrameCount", text = "Frame Count")
 
-        layout.prop(sc, "FrameCount", text = "FrameCount")
-        layout.prop(sc, "movement", text = "movement")
-        layout.prop(sc, "InsertKey", text = "InsertKey")
+class MovePanelUi(bpy.types.Panel):
+    
+    bl_idname = "object.move_panel_ui"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = "Movement"
+    bl_category = "Sugar"
+    bl_parent_id = "object.random_shake_ui"
+
+    def draw(self, context):
+        sc = context.scene
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
+
+        flow = layout.grid_flow(row_major=True, columns=0, even_columns=False, even_rows=False, align=False)
+        col = flow.column()
+
+        subcol = col.column()
+        subcol.prop(sc, "MovementMinMax", text = "Min/Max")
+        subcol.prop(sc, "MovementAxis", text = "Keyable Axis")
+
+class RotationPanelUi(bpy.types.Panel):
+    
+    bl_idname = "object.rotation_panel_ui"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = "Rotation"
+    bl_category = "Sugar"
+    bl_parent_id = "object.random_shake_ui"
+
+    def draw(self, context):
+        sc = context.scene
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
+
+        flow = layout.grid_flow(row_major=True, columns=0, even_columns=False, even_rows=False, align=False)
+        col = flow.column()
+
+        subcol = col.column()
+        subcol.prop(sc, "RotationMinMax", text = "Min/Max")
+        subcol.prop(sc, "RotationAxis", text = "Keyable Axis")
+
+class ScalePanelUi(bpy.types.Panel):
+    
+    bl_idname = "object.scale_panel_ui"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = "Scaling"
+    bl_category = "Sugar"
+    bl_parent_id = "object.random_shake_ui"
+
+    def draw(self, context):
+        sc = context.scene
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
+
+        flow = layout.grid_flow(row_major=True, columns=0, even_columns=False, even_rows=False, align=False)
+        col = flow.column()
+
+        subcol = col.column()
+        subcol.prop(sc, "ScaleMinMax", text = "Scale Min/Max")
+        subcol.prop(sc, "ScaleAxis", text = "Keyable Axis")
 
 
 def menu_fn(self, context):
@@ -106,13 +164,6 @@ def menu_fn(self, context):
 def init_props():
     sc = bpy.types.Scene
 
-    sc.movement = FloatProperty(
-        name = "movement",
-        description = "movement",
-        default = 1.0,
-        max = 5.0,
-        min = -5.0
-    )
     sc.FrameCount = IntProperty(
         name = "FrameCount",
         description = "FrameCount",
@@ -120,19 +171,63 @@ def init_props():
         max = 9999,
         min = 1
     )
-    sc.InsertKey = BoolProperty(
-        name = "InsertKey",
-        default = True
+    sc.MovementMinMax = FloatVectorProperty(
+        name = "MovementMinMax",
+        description = "MovementMinMax",
+        default = (-1.0, 1.0),
+        size = 2,
+        max = 5.0,
+        min = -5.0
+    )
+    sc.MovementAxis = BoolVectorProperty(
+        name = "MovementAxis",
+        default = (True, True, True),
+        subtype = 'XYZ',
+    )
+    sc.RotationMinMax = FloatVectorProperty(
+        name = "RotationMinMax",
+        description = "RotationMinMax",
+        default = (-1.0, 1.0),
+        size = 2,
+        max = 5.0,
+        min = -5.0
+    )
+    sc.RotationAxis = BoolVectorProperty(
+        name = "RotationAxis",
+        default = (True, True, True),
+        subtype = 'XYZ',
+    )
+    sc.ScaleMinMax = FloatVectorProperty(
+        name = "ScaleMinMax",
+        description = "ScaleMinMax",
+        default = (-1.0, 1.0),
+        size = 2,
+        max = 5.0,
+        min = -5.0
+    )
+    sc.ScaleAxis = BoolVectorProperty(
+        name = "ScaleAxis",
+        default = (True, True, True),
+        subtype = 'XYZ',
     )
 
 def clear_props():
     sc = bpy.types.Scene
 
-    del sc.movement
+    del sc.FrameCount
+    del sc.MovementMinMax
+    del sc.MovementAxis
+    del sc.RotationMinMax
+    del sc.RotationAxis
+    del sc.ScaleMinMax
+    del sc.ScaleAxis
 
 classes = [
     SetRandomShake,
-    RandomShakeUi
+    RandomShakeUi,
+    MovePanelUi,
+    RotationPanelUi,
+    ScalePanelUi
 ]
 
 def register_shortcut():
