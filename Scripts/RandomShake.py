@@ -153,7 +153,7 @@ class ScalePanelUi(bpy.types.Panel):
         col = flow.column()
 
         subcol = col.column()
-        subcol.prop(sc, "ScaleMinMax", text = "Scale Min/Max")
+        subcol.prop(sc, "ScaleMinMax", text = "Min/Max")
         subcol.prop(sc, "ScaleAxis", text = "Keyable Axis")
 
 
