@@ -83,11 +83,10 @@ class RandomShakeUi(bpy.types.Panel):
     bl_context = "objectmode"
 
     def draw(self, context):
+        op_cls = SetRandomShake
         sc = context.scene
         layout = self.layout
-        # layout.operator(
-        #     "hoge", text = "Insert Keys"
-        # )
+        layout.operator(op_cls.bl_idname, text = "Shake", icon = 'PLUS')
         layout.prop(sc, "FrameCount", text = "Frame Count")
         layout.prop(sc, "Interval", text = "Interval")
 
