@@ -89,6 +89,7 @@ class RandomShakeUi(bpy.types.Panel):
         #     "hoge", text = "Insert Keys"
         # )
         layout.prop(sc, "FrameCount", text = "Frame Count")
+        layout.prop(sc, "Interval", text = "Interval")
 
 class MovePanelUi(bpy.types.Panel):
     
@@ -171,6 +172,13 @@ def init_props():
         max = 9999,
         min = 1
     )
+    sc.Interval = IntProperty(
+        name = "Interval",
+        description = "Interval",
+        default = 1,
+        max = 99,
+        min = 0
+    )
     sc.MovementMinMax = FloatVectorProperty(
         name = "MovementMinMax",
         description = "MovementMinMax",
@@ -215,6 +223,7 @@ def clear_props():
     sc = bpy.types.Scene
 
     del sc.FrameCount
+    del sc.Interval
     del sc.MovementMinMax
     del sc.MovementAxis
     del sc.RotationMinMax
