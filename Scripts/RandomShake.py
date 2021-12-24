@@ -34,13 +34,14 @@ class SetRandomShake(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
+        sc = context.scene
         active_obj = context.active_object
         oldLocation = [active_obj.location[0], active_obj.location[1], active_obj.location[2]]
         oldRotation = [active_obj.rotation_euler[0], active_obj.rotation_euler[1], active_obj.rotation_euler[2]]
         oldScale = [active_obj.scale[0], active_obj.scale[1], active_obj.scale[2]]
         currentFrame = bpy.context.scene.frame_current
 
-        for i in range(0, FRAME_COUNT - 1):
+        for i in range(0, sc.FrameCount - 1):
             bpy.context.scene.frame_set(currentFrame)
 
             #get random value
@@ -62,7 +63,7 @@ class SetRandomShake(bpy.types.Operator):
             bpy.context.object.keyframe_insert(data_path="rotation_euler", index=-1)
             bpy.context.object.keyframe_insert(data_path="scale", index=-1)
 
-            currentFrame += INTERVAL
+            currentFrame += sc.Interval
 
         bpy.context.scene.frame_set(currentFrame)
         active_obj.location = oldLocation
