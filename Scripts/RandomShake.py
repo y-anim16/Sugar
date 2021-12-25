@@ -18,7 +18,7 @@ ValueZ = 2
 bl_info = {
     "name": "RandomShake",
     "author": "",
-    "version": (0, 0, 1),
+    "version": (0, 1, 0),
     "blender": (2, 80, 0),
     "location": "",
     "description": "",
@@ -59,22 +59,19 @@ class SetRandomShake(bpy.types.Operator):
             if insertableMoveAxes:
                 movement = self.GetRandomValues(sc.InsertableMoveAxes, sc.MovementMinMax)
                 bpy.ops.transform.translate(value = (movement[ValueX], movement[ValueY], movement[ValueZ]))
-                #TODO check axes flag
-                bpy.context.object.keyframe_insert(data_path = "location", index = -1)
+                self.InsertKeys(sc.InsertableMoveAxes, "location")
 
             if insertableRotateAxes:
                 rotation = self.GetRandomValues(sc.InsertableRotateAxes, sc.RotationMinMax)
                 bpy.ops.transform.rotate(value = rotation[ValueX], orient_axis = 'X')
                 bpy.ops.transform.rotate(value = rotation[ValueY], orient_axis = 'Y')
                 bpy.ops.transform.rotate(value = rotation[ValueZ], orient_axis = 'Z')
-                #TODO check axes flag
-                bpy.context.object.keyframe_insert(data_path = "rotation_euler", index = -1)
+                self.InsertKeys(sc.InsertableRotateAxes, "rotation_euler")
 
             if insertableResizeAxes:
                 scale = self.GetRandomValues(sc.InsertableResizeAxes, sc.ScaleMinMax)
                 bpy.ops.transform.resize(value = (scale[ValueX], scale[ValueY], scale[ValueZ]))
-                #TODO check axes flag
-                bpy.context.object.keyframe_insert(data_path = "scale", index = -1)
+                self.InsertKeys(sc.InsertableResizeAxes, "scale")
 
             currentFrame += sc.Interval
 
@@ -82,15 +79,15 @@ class SetRandomShake(bpy.types.Operator):
         
         if insertableMoveAxes:
             active_obj.location = oldLocation
-            bpy.context.object.keyframe_insert(data_path = "location", index = -1)
+            self.InsertKeys(sc.InsertableMoveAxes, "location")
 
         if insertableRotateAxes:
             active_obj.rotation_euler = oldRotation
-            bpy.context.object.keyframe_insert(data_path = "rotation_euler", index = -1)
+            self.InsertKeys(sc.InsertableRotateAxes, "rotation_euler")
         
         if insertableResizeAxes:
             active_obj.scale = oldScale
-            bpy.context.object.keyframe_insert(data_path = "scale", index = -1)
+            self.InsertKeys(sc.InsertableResizeAxes, "scale")
         return {'FINISHED'}
     
     def Insertable(self, insertableAxes):
@@ -111,6 +108,18 @@ class SetRandomShake(bpy.types.Operator):
             else:
                 randomValues[index] = 0
         return randomValues
+    
+    def InsertKeys(self, insertableAxes, dataPath):
+        if insertableAxes[ValueX] and insertableAxes[ValueY] and insertableAxes[ValueZ]:
+            bpy.context.object.keyframe_insert(data_path = dataPath)
+            return
+
+        if insertableAxes[ValueX]:
+            bpy.context.object.keyframe_insert(data_path = dataPath, index = 0)
+        if insertableAxes[ValueY]:
+            bpy.context.object.keyframe_insert(data_path = dataPath, index = 1)
+        if insertableAxes[ValueZ]:
+            bpy.context.object.keyframe_insert(data_path = dataPath, index = 2)
 
 class RandomShakeUi(bpy.types.Panel):
 
