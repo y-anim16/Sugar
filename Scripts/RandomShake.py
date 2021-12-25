@@ -9,7 +9,11 @@ INTERVAL = 2
 FRAME_COUNT = 3
 RAND_MIN = -5
 RAND_MAX = 5
-FACTOR = 0.2
+CONVERT_INT_FACTOR = 1000
+UNDO_FLAOT_FACTOR = 0.001
+ValueX = 0
+ValueY = 1
+ValueZ = 2
 
 bl_info = {
     "name": "RandomShake",
@@ -35,44 +39,78 @@ class SetRandomShake(bpy.types.Operator):
     
     def execute(self, context):
         sc = context.scene
+
+        insertableMoveAxes = self.Insertable(sc.InsertableMoveAxes)
+        insertableRotateAxes = self.Insertable(sc.InsertableRotateAxes)
+        insertableResizeAxes = self.Insertable(sc.InsertableResizeAxes)
+
         active_obj = context.active_object
-        oldLocation = [active_obj.location[0], active_obj.location[1], active_obj.location[2]]
-        oldRotation = [active_obj.rotation_euler[0], active_obj.rotation_euler[1], active_obj.rotation_euler[2]]
-        oldScale = [active_obj.scale[0], active_obj.scale[1], active_obj.scale[2]]
+        oldLocation = [active_obj.location[ValueX], active_obj.location[ValueY], active_obj.location[ValueZ]]
+        oldRotation = [active_obj.rotation_euler[ValueX], active_obj.rotation_euler[ValueY], active_obj.rotation_euler[ValueZ]]
+        oldScale = [active_obj.scale[ValueX], active_obj.scale[ValueY], active_obj.scale[ValueZ]]
         currentFrame = bpy.context.scene.frame_current
 
         for i in range(0, sc.FrameCount - 1):
             bpy.context.scene.frame_set(currentFrame)
 
-            #get random value
-            x = randint(RAND_MIN, RAND_MAX) * FACTOR
-            y = randint(RAND_MIN, RAND_MAX) * FACTOR
-            z = randint(RAND_MIN, RAND_MAX) * FACTOR
+            #TODO apply all selected object
 
             #operate transform
-            bpy.ops.transform.translate(value=(x, y, z))
-            bpy.ops.transform.rotate(value=x, orient_axis='X')
-            bpy.ops.transform.rotate(value=y, orient_axis='Y')
-            bpy.ops.transform.rotate(value=z, orient_axis='Z')
-            bpy.ops.transform.resize(value=(x, y, z))
+            if insertableMoveAxes:
+                movement = self.GetRandomValues(sc.InsertableMoveAxes, sc.MovementMinMax)
+                bpy.ops.transform.translate(value = (movement[ValueX], movement[ValueY], movement[ValueZ]))
+                #TODO check axes flag
+                bpy.context.object.keyframe_insert(data_path = "location", index = -1)
 
-            #insert keyframe (only active object)
-            #TODO apply all selected object
-            #TODO switchable on/off by checkbox?
-            bpy.context.object.keyframe_insert(data_path="location", index=-1)
-            bpy.context.object.keyframe_insert(data_path="rotation_euler", index=-1)
-            bpy.context.object.keyframe_insert(data_path="scale", index=-1)
+            if insertableRotateAxes:
+                rotation = self.GetRandomValues(sc.InsertableRotateAxes, sc.RotationMinMax)
+                bpy.ops.transform.rotate(value = rotation[ValueX], orient_axis = 'X')
+                bpy.ops.transform.rotate(value = rotation[ValueY], orient_axis = 'Y')
+                bpy.ops.transform.rotate(value = rotation[ValueZ], orient_axis = 'Z')
+                #TODO check axes flag
+                bpy.context.object.keyframe_insert(data_path = "rotation_euler", index = -1)
+
+            if insertableResizeAxes:
+                scale = self.GetRandomValues(sc.InsertableResizeAxes, sc.ScaleMinMax)
+                bpy.ops.transform.resize(value = (scale[ValueX], scale[ValueY], scale[ValueZ]))
+                #TODO check axes flag
+                bpy.context.object.keyframe_insert(data_path = "scale", index = -1)
 
             currentFrame += sc.Interval
 
         bpy.context.scene.frame_set(currentFrame)
-        active_obj.location = oldLocation
-        active_obj.rotation_euler = oldRotation
-        active_obj.scale = oldScale
-        bpy.context.object.keyframe_insert(data_path="location", index=-1)
-        bpy.context.object.keyframe_insert(data_path="rotation_euler", index=-1)
-        bpy.context.object.keyframe_insert(data_path="scale", index=-1)
+        
+        if insertableMoveAxes:
+            active_obj.location = oldLocation
+            bpy.context.object.keyframe_insert(data_path = "location", index = -1)
+
+        if insertableRotateAxes:
+            active_obj.rotation_euler = oldRotation
+            bpy.context.object.keyframe_insert(data_path = "rotation_euler", index = -1)
+        
+        if insertableResizeAxes:
+            active_obj.scale = oldScale
+            bpy.context.object.keyframe_insert(data_path = "scale", index = -1)
         return {'FINISHED'}
+    
+    def Insertable(self, insertableAxes):
+        for insertable in insertableAxes:
+            if (insertable):
+                return True
+        return False
+    
+    def GetRandomValues(self, insertableAxes, randomRange):
+        randomValues = [0, 0, 0]
+        
+        minConvertedInt = int(randomRange[0] * CONVERT_INT_FACTOR)
+        maxConvertedInt = int(randomRange[1] * CONVERT_INT_FACTOR)
+        
+        for index, randomValue in enumerate(randomValues):
+            if insertableAxes[index]:
+                randomValues[index] = randint(minConvertedInt, maxConvertedInt) * UNDO_FLAOT_FACTOR
+            else:
+                randomValues[index] = 0
+        return randomValues
 
 class RandomShakeUi(bpy.types.Panel):
 
@@ -111,7 +149,7 @@ class MovePanelUi(bpy.types.Panel):
 
         subcol = col.column()
         subcol.prop(sc, "MovementMinMax", text = "Min/Max")
-        subcol.prop(sc, "MovementAxis", text = "Keyable Axis")
+        subcol.prop(sc, "InsertableMoveAxes", text = "Enable key insertable axis")
 
 class RotationPanelUi(bpy.types.Panel):
     
@@ -133,14 +171,14 @@ class RotationPanelUi(bpy.types.Panel):
 
         subcol = col.column()
         subcol.prop(sc, "RotationMinMax", text = "Min/Max")
-        subcol.prop(sc, "RotationAxis", text = "Keyable Axis")
+        subcol.prop(sc, "InsertableRotateAxes", text = "Enable key insertable axis")
 
 class ScalePanelUi(bpy.types.Panel):
     
     bl_idname = "object.scale_panel_ui"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "Scaling"
+    bl_label = "Scale"
     bl_category = "Sugar"
     bl_parent_id = "object.random_shake_ui"
 
@@ -155,7 +193,7 @@ class ScalePanelUi(bpy.types.Panel):
 
         subcol = col.column()
         subcol.prop(sc, "ScaleMinMax", text = "Min/Max")
-        subcol.prop(sc, "ScaleAxis", text = "Keyable Axis")
+        subcol.prop(sc, "InsertableResizeAxes", text = "Enable key insertable axis")
 
 
 def menu_fn(self, context):
@@ -187,8 +225,8 @@ def init_props():
         max = 5.0,
         min = -5.0
     )
-    sc.MovementAxis = BoolVectorProperty(
-        name = "MovementAxis",
+    sc.InsertableMoveAxes = BoolVectorProperty(
+        name = "InsertableMoveAxes",
         default = (True, True, True),
         subtype = 'XYZ',
     )
@@ -200,8 +238,8 @@ def init_props():
         max = 5.0,
         min = -5.0
     )
-    sc.RotationAxis = BoolVectorProperty(
-        name = "RotationAxis",
+    sc.InsertableRotateAxes = BoolVectorProperty(
+        name = "InsertableRotateAxes",
         default = (True, True, True),
         subtype = 'XYZ',
     )
@@ -213,8 +251,8 @@ def init_props():
         max = 5.0,
         min = -5.0
     )
-    sc.ScaleAxis = BoolVectorProperty(
-        name = "ScaleAxis",
+    sc.InsertableResizeAxes = BoolVectorProperty(
+        name = "InsertableResizeAxes",
         default = (True, True, True),
         subtype = 'XYZ',
     )
@@ -225,11 +263,11 @@ def clear_props():
     del sc.FrameCount
     del sc.Interval
     del sc.MovementMinMax
-    del sc.MovementAxis
+    del sc.InsertableMoveAxes
     del sc.RotationMinMax
-    del sc.RotationAxis
+    del sc.InsertableRotateAxes
     del sc.ScaleMinMax
-    del sc.ScaleAxis
+    del sc.InsertableResizeAxes
 
 classes = [
     SetRandomShake,
@@ -245,8 +283,8 @@ def register_shortcut():
     if kc:
         km = kc.keymaps.new(name="3D View", space_type="VIEW_3D")
         kmi = km.keymap_items.new(
-            idname=SetRandomShake.bl_idname,
-            type='I',
+            idname = SetRandomShake.bl_idname,
+            type = 'I',
             value = 'PRESS',
             shift = True,
             ctrl = True,
