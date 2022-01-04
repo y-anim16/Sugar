@@ -1,1 +1,1 @@
-xcopy ..\Scripts ..\BLENDER_SCRIPTS_LOCATION /Y
+xcopy ..\Addons ..\BLENDER_SCRIPTS_LOCATION /Y
