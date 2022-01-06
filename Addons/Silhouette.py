@@ -1,8 +1,8 @@
 import bpy
-from bpy.props import (BoolProperty, EnumProperty, IntProperty, PointerProperty)
+from bpy.props import (BoolProperty, PointerProperty)
 
 bl_info = {
-    "name": "ShowSilhouette",
+    "name": "Silhouette",
     "author": "",
     "version": (0, 1, 0),
     "blender": (2, 80, 0),
@@ -12,14 +12,14 @@ bl_info = {
     "support": "TESTING",
     "doc_url": "",
     "tracker_url": "",
-    "category": "Animation"
+    "category": "Render"
 }
 
 addon_keymaps = []
 ViewPortLight = 'STUDIO'
 ShadingColorType = 'MATERIAL'
 ShadingSingleColor = (0.799338, 0.799338, 0.799338)
-ViewBackGround = 'MATCAP'
+ViewBackGround = 'VIEWPORT'
 ViewBackColor = (0.050, 0.050, 0.050) #これはグローバルじゃなくても良さそうな
 ShowBackfaceCulling = False
 ShowXray = False
@@ -28,22 +28,22 @@ ShowCavity = False
 UseDof = False
 ShowObjectOutline = True
 
-class MOI_Properties(bpy.types.PropertyGroup):
+class Properties(bpy.types.PropertyGroup):
     pressing = BoolProperty(
-        name="一定間隔でオブジェクト移動中",
-        description="一定間隔でオブジェクト移動中か？",
+        name="キー入力中",
+        description="キー入力中か",
         default=False
     )
 
 class ShowSilhouette(bpy.types.Operator):
     bl_idname = "object.show_silhouette"
     bl_label = "ShowSilhouette"
-    bl_description = "指定フレーム数だけランダムシェイクを行いキーを打ちます"
+    bl_description = "Viewportをシルエット表示にします"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
         sc = context.scene
-        props = sc.moi_props
+        props = sc.addon_props
         if props.pressing:
             return {'CANCELLED'}
         else :
@@ -87,20 +87,21 @@ class ShowSilhouette(bpy.types.Operator):
             bpy.context.space_data.shading.show_cavity = False
             bpy.context.space_data.shading.use_dof = False
             bpy.context.space_data.shading.show_object_outline = False
-            #ポーズモードじゃないとき死ぬ
-            bpy.ops.pose.hide(unselected=True)
-            bpy.ops.pose.hide(unselected=False)
+
+            if bpy.context.mode == "POSE":
+                bpy.ops.pose.hide(unselected = True)
+                bpy.ops.pose.hide(unselected = False)
             return {'FINISHED'}
 
-class ShowSilhouette2(bpy.types.Operator):
-    bl_idname = "object.show_silhouette2"
-    bl_label = "ShowSilhouette2"
-    bl_description = "指定フレーム数だけランダムシェイクを行いキーを打ちます"
+class UndoViewPort(bpy.types.Operator):
+    bl_idname = "object.undo_viewport"
+    bl_label = "UndoViewPort"
+    bl_description = "シルエット表示したViewportをもとに戻します"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
         sc = context.scene
-        props = sc.moi_props
+        props = sc.addon_props
         if props.pressing is False:
             return {'CANCELLED'}
         else:
@@ -129,42 +130,47 @@ class ShowSilhouette2(bpy.types.Operator):
             bpy.context.space_data.shading.show_cavity = ShowCavity
             bpy.context.space_data.shading.use_dof = UseDof
             bpy.context.space_data.shading.show_object_outline = ShowObjectOutline
-            bpy.ops.pose.reveal()
+            
+            if bpy.context.mode == "POSE":
+                bpy.ops.pose.reveal()
             return {'FINISHED'}
 
 class ShowSilhouetteUi(bpy.types.Panel):
 
-    bl_idname = "object.show_silhouette"
-    bl_label = "ShowSilhouette"
+    bl_idname = "object.show_silhouette_ui"
+    bl_label = "Silhouette"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Sugar"
 
     def draw(self, context):
-        op_cls = ShowSilhouette
         layout = self.layout
+        op_cls = ShowSilhouette
         layout.operator(op_cls.bl_idname, text = "ShowSilhouette")
+        op_cls = UndoViewPort
+        layout.operator(op_cls.bl_idname, text = "UndoViewport")
+        
 
 classes = [
-    MOI_Properties,
+    Properties,
     ShowSilhouette,
-    ShowSilhouette2,
+    UndoViewPort,
     ShowSilhouetteUi
 ]
 
 def init_props():
     sc = bpy.types.Scene
-    sc.moi_props = PointerProperty(
+    sc.addon_props = PointerProperty(
         name="プロパティ",
-        description="本アドオンで利用するプロパティ一覧",
-        type=MOI_Properties
+        description="プロパティ",
+        type=Properties
     )
 
 
 # プロパティの削除
 def clear_props():
     sc = bpy.types.Scene
-    del sc.moi_props
+    del sc.addon_props
 
 def register_shortcut():
     wm = bpy.context.window_manager
@@ -182,7 +188,7 @@ def register_shortcut():
         addon_keymaps.append((km,kmi))
         km2 = kc.keymaps.new(name="3D View", space_type="VIEW_3D")
         kmi2 = km.keymap_items.new(
-            idname = ShowSilhouette2.bl_idname,
+            idname = UndoViewPort.bl_idname,
             type = 'F5',
             value = 'RELEASE',
             shift = False,
