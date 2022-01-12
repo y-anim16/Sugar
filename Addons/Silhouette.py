@@ -44,7 +44,7 @@ class ShowSilhouette(bpy.types.Operator):
     def execute(self, context):
         sc = context.scene
         props = sc.addon_props
-        if props.pressing:
+        if props.pressing == True:
             return {'CANCELLED'}
         else :
             props.pressing = True
@@ -102,7 +102,7 @@ class UndoViewPort(bpy.types.Operator):
     def execute(self, context):
         sc = context.scene
         props = sc.addon_props
-        if props.pressing is False:
+        if props.pressing == False:
             return {'CANCELLED'}
         else:
             props.pressing = False
