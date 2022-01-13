@@ -132,7 +132,7 @@ class UndoViewPort(bpy.types.Operator):
             bpy.context.space_data.shading.show_object_outline = ShowObjectOutline
             
             if bpy.context.mode == "POSE":
-                bpy.ops.pose.reveal()
+                bpy.ops.pose.reveal(select=False)
             return {'FINISHED'}
 
 class ShowSilhouetteUi(bpy.types.Panel):
