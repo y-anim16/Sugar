@@ -27,6 +27,7 @@ ShowShadows = False
 ShowCavity = False
 UseDof = False
 ShowObjectOutline = True
+SelectedObjects = []
 
 class Properties(bpy.types.PropertyGroup):
     pressing = BoolProperty(
@@ -47,6 +48,11 @@ class ShowSilhouette(bpy.types.Operator):
         if props.pressing == True:
             return {'CANCELLED'}
         else :
+            #選択中のリグを保存しておく
+            if bpy.context.mode == "POSE":
+                global SelectedObjects
+                SelectedObjects = bpy.context.selected_pose_bones
+
             props.pressing = True
             global ViewPortLight
             global ShadingColorType
@@ -133,6 +139,11 @@ class UndoViewPort(bpy.types.Operator):
             
             if bpy.context.mode == "POSE":
                 bpy.ops.pose.reveal(select=False)
+                #シルエット表示前に選択していたボーンを再選択
+                global SelectedObjects
+                for selectedObj in SelectedObjects:
+                    bpy.context.object.data.bones.active = selectedObj.bone
+                    bpy.context.object.data.bones.active.select = True
             return {'FINISHED'}
 
 class ShowSilhouetteUi(bpy.types.Panel):
