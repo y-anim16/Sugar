@@ -1,0 +1,2 @@
+KeyMapName
+https://blender.stackexchange.com/questions/200811/is-there-a-reference-for-how-to-add-custom-keymaps-to-operators-in-an-addon
