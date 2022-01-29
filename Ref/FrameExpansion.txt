@@ -1,2 +1,6 @@
 KeyMapName
 https://blender.stackexchange.com/questions/200811/is-there-a-reference-for-how-to-add-custom-keymaps-to-operators-in-an-addon
+
+Timer modalがキーやマウスのイベントがないと更新されないので、タイマーで自動更新するようにした
+https://devtalk.blender.org/t/have-modal-called-every-frame/9144/2
+https://colorful-pico.net/introduction-to-addon-development-in-blender/2.8/html/chapter_03/03_Handle_Timer_Event.html?toc-chapter=3.%20%E3%82%88%E3%82%8A%E9%AB%98%E5%BA%A6%E3%81%AA%E3%82%A2%E3%83%89%E3%82%AA%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%E3%81%9F%E3%82%81%E3%81%AB&toc-section=@03:3-3.%20%E3%82%BF%E3%82%A4%E3%83%9E%E3%81%AE%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%82%92%E6%89%B1%E3%81%86
