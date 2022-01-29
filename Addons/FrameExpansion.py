@@ -1,5 +1,4 @@
-#再生中だったら停止したほうがよさそう
-
+#TODO previewとまではいかなくても視覚的なわかりやすさがもう少しほしいかも
 import bpy
 from bpy.props import IntProperty, BoolProperty, PointerProperty
 import blf
@@ -86,7 +85,7 @@ class ExpandFrame(bpy.types.Operator):
         if not cls.is_running():
             # 描画関数の登録
             cls.__handle = bpy.types.SpaceDopeSheetEditor.draw_handler_add(
-                cls.__draw, (context, ), 'HEADER', 'POST_PIXEL'
+                cls.__draw, (context, ), 'WINDOW', 'POST_PIXEL'
             )
 
     @classmethod
@@ -94,51 +93,53 @@ class ExpandFrame(bpy.types.Operator):
         if cls.is_running():
             # 描画関数の登録を解除
             bpy.types.SpaceDopeSheetEditor.draw_handler_remove(
-                cls.__handle, 'HEADER'
+                cls.__handle, 'WINDOW'
             )
             cls.__handle = None
 
     @classmethod
     def __draw(cls, context):
         # リージョンの幅を取得するため、描画先のリージョンを得る
-        region = get_region(context, 'DOPESHEET_EDITOR', 'HEADER')
+        region = get_region(context, 'DOPESHEET_EDITOR', 'WINDOW')
 
         # 追加・削除するフレーム数を描画
-        # TODO 追加は「+」を付けて描画したい
         if region is not None:
             blf.color(0, 1.0, 1.0, 1.0, 1.0)
-            blf.size(0, 12, 72)
-            blf.position(0, region.width - 400, region.height - 20.0, 0)
+            blf.size(0, 24, 72)
+            blf.position(0, 100, 100, 0)
             
             global AddFrameCount
-            blf.draw(0, "AddFrameCount : " + str(AddFrameCount))
+            if AddFrameCount > 0:
+                blf.draw(0, "AddFrameCount : " + '+' + str(AddFrameCount))
+            else:
+                blf.draw(0, "AddFrameCount : " + str(AddFrameCount))
 
     def invoke(self, context, event):
         op_cls = ExpandFrame
         if context.area.type == 'DOPESHEET_EDITOR':
-            # [開始] ボタンが押された時の処理
             if not self.is_running():
+                #再生中だったら停止する
+                bpy.ops.screen.animation_cancel(restore_frame=False)
                 # モーダルモードを開始
                 context.window_manager.modal_handler_add(self)
                 #終了時、モーダルモード自動更新のため、タイマーを起動しておく
-                op_cls.__timer = context.window_manager.event_timer_add(0.01, window=context.window)
+                op_cls.__timer = context.window_manager.event_timer_add(0.001, window=context.window)
                 op_cls.__handle_add(context)
                 op_cls.__running = True
                 return {'RUNNING_MODAL'}
-            # [終了] ボタンが押された時の処理
             else:
                 context.window_manager.event_timer_remove(op_cls.__timer)
                 op_cls.__timer = None
 
-                #フレームの追加→キーの移動になるので、現在のフレームから先をすべて選択
-                bpy.ops.action.select_leftright(mode='RIGHT', extend=False)
-                # フレームの追加・削除(全体のフレーム数を変更しキーを移動させる)
-                # TODO 0だったら何もしない
                 global AddFrameCount
-                bpy.context.scene.frame_end += AddFrameCount
-                bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(AddFrameCount, 0, 0, 0))
-                # 次の操作に備えて0に戻しておく
-                AddFrameCount = 0
+                if AddFrameCount != 0:
+                    #フレームの追加→キーの移動になるので、現在のフレームから先をすべて選択
+                    bpy.ops.action.select_leftright(mode='RIGHT', extend=False)
+                    # フレームの追加・削除(全体のフレーム数を変更しキーを移動させる)
+                    bpy.context.scene.frame_end += AddFrameCount
+                    bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(AddFrameCount, 0, 0, 0))
+                    # 次の操作に備えて0に戻しておく
+                    AddFrameCount = 0
 
                 op_cls.__handle_remove(context)
                 op_cls.__running = False
