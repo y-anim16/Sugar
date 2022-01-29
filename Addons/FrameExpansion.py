@@ -1,6 +1,5 @@
 #再生中だったら停止したほうがよさそう
 
-from contextlib import nullcontext
 import bpy
 from bpy.props import IntProperty, BoolProperty, PointerProperty
 import blf
@@ -42,27 +41,16 @@ def get_region(context, area_type, region_type):
 addon_keymaps = []
 AddFrameCount = 0
 
-class FrameExpandProperties(bpy.types.PropertyGroup):
-    pressing = BoolProperty(
-        name="キー入力中",
-        description="キー入力中か",
-        default=False
-    )
-    add_frame_count = IntProperty(
-        name="フレーム追加する数",
-        description="フレーム追加する数",
-        default=0
-    )
-
 class ExpandFrame(bpy.types.Operator):
     bl_idname = "object.frame_expansion"
     bl_label = "AddOrRemoveFrame"
     bl_description = "フレームの追加・削除をします"
+    #TODO Undo2回入力しないといけない不具合あり
+    bl_options = {'REGISTER', 'UNDO'}
 
-    # Trueの場合は、マウスをドラッグさせたときに、アクティブなオブジェクトが
-    # 回転する（Trueの場合は、モーダルモード中である）
     __running = False
     __handle = None
+    __timer = None
 
     # モーダルモード中はTrueを返す
     @classmethod
@@ -71,8 +59,6 @@ class ExpandFrame(bpy.types.Operator):
 
     def modal(self, context, event):
         sc = context.scene
-        props = sc.frame_expand_prps
-
         global AddFrameCount
 
         # エリアを再描画
@@ -129,29 +115,30 @@ class ExpandFrame(bpy.types.Operator):
 
     def invoke(self, context, event):
         op_cls = ExpandFrame
-
-        print('invoke')
-
-        #TODO フラグ管理がうまくいっていない
         if context.area.type == 'DOPESHEET_EDITOR':
             # [開始] ボタンが押された時の処理
             if not self.is_running():
-                print('run modal')
                 # モーダルモードを開始
                 context.window_manager.modal_handler_add(self)
+                #終了時、モーダルモード自動更新のため、タイマーを起動しておく
+                op_cls.__timer = context.window_manager.event_timer_add(0.01, window=context.window)
                 op_cls.__handle_add(context)
                 op_cls.__running = True
                 return {'RUNNING_MODAL'}
             # [終了] ボタンが押された時の処理
             else:
-                print('exit modal')
+                context.window_manager.event_timer_remove(op_cls.__timer)
+                op_cls.__timer = None
+
+                #フレームの追加→キーの移動になるので、現在のフレームから先をすべて選択
                 bpy.ops.action.select_leftright(mode='RIGHT', extend=False)
-                
-                # フレームの追加・削除
+                # フレームの追加・削除(全体のフレーム数を変更しキーを移動させる)
                 # TODO 0だったら何もしない
                 global AddFrameCount
                 bpy.context.scene.frame_end += AddFrameCount
                 bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(AddFrameCount, 0, 0, 0))
+                # 次の操作に備えて0に戻しておく
+                AddFrameCount = 0
 
                 op_cls.__handle_remove(context)
                 op_cls.__running = False
@@ -161,7 +148,6 @@ class ExpandFrame(bpy.types.Operator):
 
 
 class ExpandFrameUi(bpy.types.Panel):
-
     bl_label = "Add or Remove Frame"
     bl_space_type = 'DOPESHEET_EDITOR'
     bl_region_type = 'UI'
@@ -170,31 +156,16 @@ class ExpandFrameUi(bpy.types.Panel):
 
     def draw(self, context):
         op_cls = ExpandFrame
-
         layout = self.layout
-        # [開始] / [終了] ボタンを追加
         if not op_cls.is_running():
-            layout.operator(op_cls.bl_idname, text="開始", icon='PLAY')
+            layout.operator(op_cls.bl_idname, text="Start Add Frame")
         else:
-            layout.operator(op_cls.bl_idname, text="終了", icon='PAUSE')
+            layout.operator(op_cls.bl_idname, text="Add Frame")
 
 classes = [
     ExpandFrame,
     ExpandFrameUi,
-    FrameExpandProperties,
 ]
-
-def init_props():
-    sc = bpy.types.Scene
-    sc.frame_expand_prps = PointerProperty(
-        name="frameExpandProperties",
-        description="",
-        type=FrameExpandProperties
-    )
-
-def clear_props():
-    sc = bpy.types.Scene
-    del sc.frame_expand_prps
 
 def register_shortcut():
     wm = bpy.context.window_manager
@@ -229,16 +200,12 @@ def unregister_shortcut():
 def register():
     for c in classes:
         bpy.utils.register_class(c)
-    init_props()
     register_shortcut()
-
 
 def unregister():
     unregister_shortcut()
-    clear_props()
     for c in classes:
         bpy.utils.unregister_class(c)
-
 
 if __name__ == "__main__":
     register()
