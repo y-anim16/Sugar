@@ -160,7 +160,7 @@ class ExpandFrameUi(bpy.types.Panel):
         op_cls = ExpandFrame
         layout = self.layout
         if not op_cls.is_running():
-            layout.operator(op_cls.bl_idname, text="Start Add Frame")
+            layout.operator(op_cls.bl_idname, text="Start")
         else:
             layout.operator(op_cls.bl_idname, text="Add Frame")
 
