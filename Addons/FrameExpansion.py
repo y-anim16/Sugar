@@ -44,8 +44,6 @@ class ExpandFrame(bpy.types.Operator):
     bl_idname = "object.frame_expansion"
     bl_label = "AddOrRemoveFrame"
     bl_description = "フレームの追加・削除をします"
-    #TODO Undo2回入力しないといけない不具合あり
-    bl_options = {'REGISTER', 'UNDO'}
 
     __running = False
     __handle = None
@@ -140,6 +138,9 @@ class ExpandFrame(bpy.types.Operator):
                     bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(AddFrameCount, 0, 0, 0))
                     # 次の操作に備えて0に戻しておく
                     AddFrameCount = 0
+                    
+                    #フレーム操作を行ったので、undo登録
+                    bpy.ops.ed.undo_push()
 
                 op_cls.__handle_remove(context)
                 op_cls.__running = False
