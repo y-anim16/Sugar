@@ -94,9 +94,7 @@ class ShowSilhouette(bpy.types.Operator):
             bpy.context.space_data.shading.use_dof = False
             bpy.context.space_data.shading.show_object_outline = False
 
-            if bpy.context.mode == "POSE":
-                bpy.ops.pose.hide(unselected = True)
-                bpy.ops.pose.hide(unselected = False)
+            bpy.context.space_data.overlay.show_overlays = False
             return {'FINISHED'}
 
 class UndoViewPort(bpy.types.Operator):
@@ -137,13 +135,7 @@ class UndoViewPort(bpy.types.Operator):
             bpy.context.space_data.shading.use_dof = UseDof
             bpy.context.space_data.shading.show_object_outline = ShowObjectOutline
             
-            if bpy.context.mode == "POSE":
-                bpy.ops.pose.reveal(select=False)
-                #シルエット表示前に選択していたボーンを再選択
-                global SelectedObjects
-                for selectedObj in SelectedObjects:
-                    bpy.context.object.data.bones.active = selectedObj.bone
-                    bpy.context.object.data.bones.active.select = True
+            bpy.context.space_data.overlay.show_overlays = True
             return {'FINISHED'}
 
 class ShowSilhouetteUi(bpy.types.Panel):
