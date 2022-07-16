@@ -30,6 +30,19 @@ class SetOriginToSelected(bpy.types.Operator):
 
         return {'FINISHED'}
 
+#TODO Add new command class.
+class NEW_COMMAND_CLASS(bpy.types.Operator):
+    bl_idname = "object.new_command"
+    bl_label = "NewCommand"
+    bl_description = "NewCommandDescription"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        #TODO Add command.
+
+        return {'FINISHED'}
+
+
 class BerriesUi(bpy.types.Panel):
     bl_idname = "object.berries_ui"
     bl_label = "Berries"
@@ -42,10 +55,17 @@ class BerriesUi(bpy.types.Panel):
         layout = self.layout
         op_cls = SetOriginToSelected
         layout.operator(op_cls.bl_idname, text = "Set origin to selected")
+
+        #TODO ここで新しいコマンドのボタン登録
+        #op_cls = NEW_CLASS_NAME
+        #layout.operator(op_cls.bl_idname, text = "NEW_BUTTON_NAME")
         
 
 classes = [
     SetOriginToSelected,
+    #TODO ここで新しく追加したコマンドクラスの登録
+    #NEW_CLASS_NAME,
+
     BerriesUi
 ]
 
