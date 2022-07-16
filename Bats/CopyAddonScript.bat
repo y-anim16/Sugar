@@ -1,0 +1,1 @@
+xcopy ..\Addons ..\BLENDER_SCRIPTS_LOCATION /Y
