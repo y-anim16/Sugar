@@ -30,6 +30,43 @@ class SetOriginToSelected(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class AddDeactivateKeyFrame(bpy.types.Operator):
+    bl_idname = "object.add_deactivate_key_frame"
+    bl_label = "AddDeactivateKeyFrame"
+    bl_description = "非アクティブ化するキーフレームを追加します"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        print('start')
+        bpy.context.object.hide_render = True
+        # タイムライン上でキーが消えるのが困るので、viewport上では箱で表示
+        bpy.context.object.display_type = 'BOUNDS'
+
+        # キーフレーム挿入
+        bpy.context.object.keyframe_insert(data_path = 'hide_render')
+        bpy.context.object.keyframe_insert(data_path = 'display_type')
+
+        print('finished')
+        return {'FINISHED'}
+
+class AddActivateKeyFrame(bpy.types.Operator):
+    bl_idname = "object.add_activate_key_frame"
+    bl_label = "AddActivateKeyFrame"
+    bl_description = "アクティブ化するキーフレームを追加します"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        print('start')
+        bpy.context.object.hide_render = False
+        bpy.context.object.display_type = 'TEXTURED'
+
+        # キーフレーム挿入
+        bpy.context.object.keyframe_insert(data_path = 'hide_render')
+        bpy.context.object.keyframe_insert(data_path = 'display_type')
+
+        print('finished')
+        return {'FINISHED'}
+
 #TODO Add new command class.
 class NEW_COMMAND_CLASS(bpy.types.Operator):
     bl_idname = "object.new_command"
@@ -49,7 +86,6 @@ class BerriesUi(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Sugar"
-    #bl_context = "mesh_edit"
 
     def draw(self, context):
         layout = self.layout
@@ -58,6 +94,13 @@ class BerriesUi(bpy.types.Panel):
             op_cls = SetOriginToSelected
             layout.operator(op_cls.bl_idname, text = "Set origin to selected")
 
+        if bpy.context.mode == 'OBJECT':
+            op_cls = AddDeactivateKeyFrame
+            layout.operator(op_cls.bl_idname, text = "Deactivate key frame")
+
+            op_cls = AddActivateKeyFrame
+            layout.operator(op_cls.bl_idname, text = "Activate key frame")
+
         #TODO ここで新しいコマンドのボタン登録
         #op_cls = NEW_CLASS_NAME
         #layout.operator(op_cls.bl_idname, text = "NEW_BUTTON_NAME")
@@ -65,6 +108,9 @@ class BerriesUi(bpy.types.Panel):
 
 classes = [
     SetOriginToSelected,
+    AddDeactivateKeyFrame,
+    AddActivateKeyFrame,
+
     #TODO ここで新しく追加したコマンドクラスの登録
     #NEW_CLASS_NAME,
 
