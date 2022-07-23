@@ -49,12 +49,14 @@ class BerriesUi(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Sugar"
-    bl_context = "mesh_edit"
+    #bl_context = "mesh_edit"
 
     def draw(self, context):
         layout = self.layout
-        op_cls = SetOriginToSelected
-        layout.operator(op_cls.bl_idname, text = "Set origin to selected")
+        
+        if bpy.context.mode == 'EDIT_MESH':
+            op_cls = SetOriginToSelected
+            layout.operator(op_cls.bl_idname, text = "Set origin to selected")
 
         #TODO ここで新しいコマンドのボタン登録
         #op_cls = NEW_CLASS_NAME
