@@ -33,7 +33,7 @@ class SetOriginToSelected(bpy.types.Operator):
 class AddShowHideKeyFrame(bpy.types.Operator):
     bl_idname = "object.add_show_hide_key_frame"
     bl_label = "AddShowHideKeyFrame"
-    bl_description = "非アクティブ化するキーフレームを追加します"
+    bl_description = "表示/非表示を切り替えるキーフレームを追加します"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
