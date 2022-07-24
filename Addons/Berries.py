@@ -30,40 +30,35 @@ class SetOriginToSelected(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class AddDeactivateKeyFrame(bpy.types.Operator):
-    bl_idname = "object.add_deactivate_key_frame"
-    bl_label = "AddDeactivateKeyFrame"
+class AddShowHideKeyFrame(bpy.types.Operator):
+    bl_idname = "object.add_show_hide_key_frame"
+    bl_label = "AddShowHideKeyFrame"
     bl_description = "非アクティブ化するキーフレームを追加します"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
         print('start')
-        bpy.context.object.hide_render = True
+        isHide = True
         # タイムライン上でキーが消えるのが困るので、viewport上では箱で表示
-        bpy.context.object.display_type = 'BOUNDS'
+        displayType = 'BOUNDS'
+        
+        if bpy.context.object.hide_render:
+            isHide = False
+            displayType = 'TEXTURED'
 
+        bpy.context.object.hide_render = isHide
+        bpy.context.object.display_type = displayType
         # キーフレーム挿入
         bpy.context.object.keyframe_insert(data_path = 'hide_render')
         bpy.context.object.keyframe_insert(data_path = 'display_type')
 
-        print('finished')
-        return {'FINISHED'}
-
-class AddActivateKeyFrame(bpy.types.Operator):
-    bl_idname = "object.add_activate_key_frame"
-    bl_label = "AddActivateKeyFrame"
-    bl_description = "アクティブ化するキーフレームを追加します"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    def execute(self, context):
-        print('start')
-        bpy.context.object.hide_render = False
-        bpy.context.object.display_type = 'TEXTURED'
-
-        # キーフレーム挿入
-        bpy.context.object.keyframe_insert(data_path = 'hide_render')
-        bpy.context.object.keyframe_insert(data_path = 'display_type')
-
+        # 子オブジェクトも合わせて
+        for c in bpy.context.object.children_recursive:
+            c.hide_render = isHide
+            c.display_type = displayType
+            c.keyframe_insert(data_path = 'hide_render')
+            c.keyframe_insert(data_path = 'display_type')
+ 
         print('finished')
         return {'FINISHED'}
 
@@ -95,11 +90,8 @@ class BerriesUi(bpy.types.Panel):
             layout.operator(op_cls.bl_idname, text = "Set origin to selected")
 
         if bpy.context.mode == 'OBJECT':
-            op_cls = AddDeactivateKeyFrame
-            layout.operator(op_cls.bl_idname, text = "Deactivate key frame")
-
-            op_cls = AddActivateKeyFrame
-            layout.operator(op_cls.bl_idname, text = "Activate key frame")
+            op_cls = AddShowHideKeyFrame
+            layout.operator(op_cls.bl_idname, text = "Add Show/Hide key frame")
 
         #TODO ここで新しいコマンドのボタン登録
         #op_cls = NEW_CLASS_NAME
@@ -108,8 +100,7 @@ class BerriesUi(bpy.types.Panel):
 
 classes = [
     SetOriginToSelected,
-    AddDeactivateKeyFrame,
-    AddActivateKeyFrame,
+    AddShowHideKeyFrame,
 
     #TODO ここで新しく追加したコマンドクラスの登録
     #NEW_CLASS_NAME,
