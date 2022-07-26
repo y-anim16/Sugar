@@ -133,9 +133,20 @@ class ExpandFrame(bpy.types.Operator):
                 if AddFrameCount != 0:
                     #フレームの追加→キーの移動になるので、現在のフレームから先をすべて選択
                     bpy.ops.action.select_leftright(mode='RIGHT', extend=False)
+
+                    # markerの移動(ver3.2以降)
+                    major = bpy.app.version[0]
+                    minor = bpy.app.version[1]
+                    if major >= 3 and minor >= 2:
+                        # 現在のフレームから先のマーカーをすべて選択
+                        bpy.ops.marker.select_leftright(mode='RIGHT')
+                        # マーカーの移動
+                        bpy.ops.marker.move(frames=AddFrameCount)
+                    
                     # フレームの追加・削除(全体のフレーム数を変更しキーを移動させる)
                     bpy.context.scene.frame_end += AddFrameCount
                     bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(AddFrameCount, 0, 0, 0))
+
                     # 次の操作に備えて0に戻しておく
                     AddFrameCount = 0
                     
