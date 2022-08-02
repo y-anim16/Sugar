@@ -1,4 +1,5 @@
 #TODO previewとまではいかなくても視覚的なわかりやすさがもう少しほしいかも
+from logging import exception
 import bpy
 from bpy.props import IntProperty, BoolProperty, PointerProperty
 import blf
@@ -138,10 +139,13 @@ class ExpandFrame(bpy.types.Operator):
                     major = bpy.app.version[0]
                     minor = bpy.app.version[1]
                     if major >= 3 and minor >= 2:
-                        # 現在のフレームから先のマーカーをすべて選択
-                        bpy.ops.marker.select_leftright(mode='RIGHT')
-                        # マーカーの移動
-                        bpy.ops.marker.move(frames=AddFrameCount)
+                        try:
+                            # 現在のフレームから先のマーカーをすべて選択
+                            bpy.ops.marker.select_leftright(mode='RIGHT', extend=False)
+                            # マーカーの移動
+                            bpy.ops.marker.move(frames=AddFrameCount)
+                        except:
+                            print('no marker')
                     
                     # フレームの追加・削除(全体のフレーム数を変更しキーを移動させる)
                     bpy.context.scene.frame_end += AddFrameCount
