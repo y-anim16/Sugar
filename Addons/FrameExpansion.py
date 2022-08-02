@@ -149,6 +149,7 @@ class ExpandFrame(bpy.types.Operator):
                     
                     # フレームの追加・削除(全体のフレーム数を変更しキーを移動させる)
                     bpy.context.scene.frame_end += AddFrameCount
+                    bpy.context.scene.frame_preview_end += AddFrameCount
                     bpy.ops.transform.transform(mode='TIME_TRANSLATE', value=(AddFrameCount, 0, 0, 0))
 
                     # 次の操作に備えて0に戻しておく
