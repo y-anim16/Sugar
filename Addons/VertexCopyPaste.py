@@ -23,13 +23,14 @@ class CopyAndPasteVertex(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        print('Hello world')
-        # bpy.ops.view3d.snap_cursor_to_selected()
-        # bpy.ops.object.editmode_toggle()
-        # bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-        
-        # #3Dカーソルはワールド原点に戻しておく
-        # bpy.ops.view3d.snap_cursor_to_center()
+
+        #一度編集モードを切らないと選択した頂点情報を取得できない
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.object.editmode_toggle() #編集モードに戻す
+
+        selectedVertexes = [v for v in bpy.context.object.data.vertices if v.select]
+        if len(selectedVertexes) > 0:
+            print(selectedVertexes[0].co)
 
         return {'FINISHED'}
 
@@ -68,10 +69,10 @@ def register_shortcut():
         km = kc.keymaps.new(name="3D View", space_type="VIEW_3D")
         kmi = km.keymap_items.new(
             idname = CopyAndPasteVertex.bl_idname,
-            type = 'G',
+            type = 'X',
             value = 'PRESS',
             shift = True,
-            ctrl = True,
+            ctrl = False,
             alt = False
         )
         addon_keymaps.append((km,kmi))
