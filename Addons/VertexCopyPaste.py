@@ -1,5 +1,7 @@
 import bpy
 
+from mathutils import Vector, Matrix
+
 bl_info = {
     "name": "VertexCopyPaste",
     "author": "",
@@ -19,7 +21,7 @@ addon_keymaps = []
 class CopyAndPasteVertex(bpy.types.Operator):
     bl_idname = "object.copy_and_paste_vertex"
     bl_label = "CopyAndPasteVertex"
-    bl_description = ""
+    bl_description = "copy and paste vertex location"
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
@@ -29,9 +31,18 @@ class CopyAndPasteVertex(bpy.types.Operator):
         bpy.ops.object.editmode_toggle() #編集モードに戻す
 
         selectedVertexes = [v for v in bpy.context.object.data.vertices if v.select]
-        if len(selectedVertexes) > 0:
-            for selectedV in selectedVertexes:
-                print(selectedV.co)
+
+        #TODO refactor
+        if len(selectedVertexes) > 1:
+            hogeIndex = selectedVertexes[0].index
+            selectedVertexes[0].co = selectedVertexes[1].co
+            hogePos = [selectedVertexes[1].co[0], selectedVertexes[1].co[1], selectedVertexes[1].co[2]]
+            bpy.ops.object.editmode_toggle()
+
+            bpy.context.object.data.vertices[hogeIndex].co = hogePos
+
+            bpy.ops.object.editmode_toggle()
+
 
         return {'FINISHED'}
 
