@@ -30,7 +30,8 @@ class CopyAndPasteVertex(bpy.types.Operator):
 
         selectedVertexes = [v for v in bpy.context.object.data.vertices if v.select]
         if len(selectedVertexes) > 0:
-            print(selectedVertexes[0].co)
+            for selectedV in selectedVertexes:
+                print(selectedV.co)
 
         return {'FINISHED'}
 
