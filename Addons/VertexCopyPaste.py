@@ -30,16 +30,39 @@ class CopyAndPasteVertex(bpy.types.Operator):
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.editmode_toggle() #編集モードに戻す
 
+        hoge = bpy.context.selected_objects
+        print(len(hoge))
+        for o in hoge:
+            print(o)
+            print(o.data.vertices)
+            matW = o.matrix_world
+            hogeV = [v for v in o.data.vertices if v.select]
+            for selectedV in hogeV: 
+                print(matW @ selectedV.co) # world座標算出
+
+        #print(hoge[0].data.vertices[0].co)
+        #print(hoge[1].data.vertices[2].co)
+
+        mat = hoge[1].matrix_world
+        #print(mat @ hoge[1].data.vertices[2].co)
+        #//a = [v for v in hoge if v.select]
+        #print(a)
+
+        # for o in hoge:
+        #     selected = [v for v in o if v.select]
+        #     for s in selected:
+        #         print(s)
+
         selectedVertexes = [v for v in bpy.context.object.data.vertices if v.select]
 
         #TODO refactor
         if len(selectedVertexes) > 1:
-            hogeIndex = selectedVertexes[0].index
+            selectedVIndex = selectedVertexes[0].index
             selectedVertexes[0].co = selectedVertexes[1].co
-            hogePos = [selectedVertexes[1].co[0], selectedVertexes[1].co[1], selectedVertexes[1].co[2]]
+            lastSelectedVPos = [selectedVertexes[1].co[0], selectedVertexes[1].co[1], selectedVertexes[1].co[2]]
             bpy.ops.object.editmode_toggle()
 
-            bpy.context.object.data.vertices[hogeIndex].co = hogePos
+            bpy.context.object.data.vertices[selectedVIndex].co = lastSelectedVPos
 
             bpy.ops.object.editmode_toggle()
 
