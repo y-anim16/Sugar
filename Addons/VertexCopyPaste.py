@@ -30,20 +30,44 @@ class CopyAndPasteVertex(bpy.types.Operator):
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.editmode_toggle() #編集モードに戻す
 
-        hoge = bpy.context.selected_objects
-        print(len(hoge))
-        for o in hoge:
-            print(o)
-            print(o.data.vertices)
-            matW = o.matrix_world
-            hogeV = [v for v in o.data.vertices if v.select]
-            for selectedV in hogeV: 
-                print(matW @ selectedV.co) # world座標算出
 
+        # activeObj 最後に選択した奴
+        # selected_object かつ activeObj ではないもの →　最初に選択したやつ
+        # activeObj のところに、最初に選択した奴を持っていく
+
+        print('activeObj' + str(bpy.context.active_object))
+        print('selectedObj' + str(bpy.context.selected_objects))
+
+        # active のindex がわかればよいかも
+        # もしくはactive を取り除いたリスト
+
+        # まず、selectedのなかでactiveのindexがいくつかを出す
+        # active の頂点の座標をworldで出す
+
+        activeObj = bpy.context.active_object
+        activeObjVertices = []
+        for selectedV in [v for v in activeObj.data.vertices if v.select]:
+            vInfo = {}
+            vInfo['vertex'] = selectedV
+            vInfo['worldPos'] = activeObj.matrix_world @ selectedV.co
+            activeObjVertices.append(vInfo)
+
+            
+        # selectedVertexes = []
+        # for index, obj in enumerate(bpy.context.selected_objects):
+        #     if index == activeObjIndex:
+        #             continue
+
+        #     for selectedV in [v for v in selectedObj.data.vertices if v.select]:
+        #         vertexInfo = {}
+        #         vertexInfo['vertex'] = selectedV
+        #         selectedVertexes.append(vertexInfo)
+
+        #print(selectedVertexes)
         #print(hoge[0].data.vertices[0].co)
         #print(hoge[1].data.vertices[2].co)
 
-        mat = hoge[1].matrix_world
+        #mat = selectedObjects[1].matrix_world
         #print(mat @ hoge[1].data.vertices[2].co)
         #//a = [v for v in hoge if v.select]
         #print(a)
@@ -53,18 +77,36 @@ class CopyAndPasteVertex(bpy.types.Operator):
         #     for s in selected:
         #         print(s)
 
-        selectedVertexes = [v for v in bpy.context.object.data.vertices if v.select]
+        #selected が1種や同じObjの頂点が含まれるなら工夫が必要
 
-        #TODO refactor
-        if len(selectedVertexes) > 1:
-            selectedVIndex = selectedVertexes[0].index
-            selectedVertexes[0].co = selectedVertexes[1].co
-            lastSelectedVPos = [selectedVertexes[1].co[0], selectedVertexes[1].co[1], selectedVertexes[1].co[2]]
-            bpy.ops.object.editmode_toggle()
+        if len(bpy.context.selected_objects) > 1:
+            for selectedObj in bpy.context.selected_objects:
+                if selectedObj == activeObj:
+                    continue
 
-            bpy.context.object.data.vertices[selectedVIndex].co = lastSelectedVPos
+                localPos = selectedObj.matrix_world.inverted() @ activeObjVertices[0]['worldPos']
+                bpy.ops.object.editmode_toggle()
+                
+                for selectedV in [v for v in selectedObj.data.vertices if v.select]:
+                    selectedV.co = [localPos[0], localPos[1], localPos[2]]
 
-            bpy.ops.object.editmode_toggle()
+                bpy.ops.object.editmode_toggle()
+
+        # if len(selectedVertexes) > 1:
+        #     # for ループで回す
+        #     selectedVIndex = selectedVertexes[0]['vertex'].index
+        #     # world座標にしていたのを対象のオブジェクトのlocal座標に直す
+        #     #localPos = bpy.context.selected_objects[0].matrix_world.inverted() @ selectedVertexes[1]['worldPos']
+        #     #それぞれのローカルに置き換える
+        #     localPos = bpy.context.active_object.matrix_world.inverted() @ selectedVertexes[1]['worldPos']
+        #     lastSelectedVPos = [localPos[0], localPos[1], localPos[2]]
+        #     bpy.ops.object.editmode_toggle()
+
+        #     #bpy.context.selected_objects[0].data.vertices[selectedVIndex].co = lastSelectedVPos
+        #     #ここで変えるのはactiveObject 以外の選択ObjVertex
+        #     bpy.context.active_object.data.vertices[selectedVIndex].co = lastSelectedVPos
+
+        #     bpy.ops.object.editmode_toggle()
 
 
         return {'FINISHED'}
