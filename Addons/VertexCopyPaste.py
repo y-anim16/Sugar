@@ -1,7 +1,5 @@
 import bpy
 
-from mathutils import Vector, Matrix
-
 bl_info = {
     "name": "VertexCopyPaste",
     "author": "",
@@ -52,10 +50,13 @@ class CopyAndPasteVertex(bpy.types.Operator):
                 bpy.ops.object.editmode_toggle()
                 
                 for selectedV in [v for v in selectedObj.data.vertices if v.select]:
-                    # selectedV.co = [localPos[0], localPos[1], localPos[2]]
-                    selectedObj.active_shape_key.data[selectedV.index].co = [localPos[0], localPos[1], localPos[2]]
-                    #selectedV.co = [localPos[0], localPos[1], localPos[2]]
-
+                    if selectedObj.data.shape_keys == None:
+                        selectedV.co = [localPos[0], localPos[1], localPos[2]]
+                    else:
+                        if selectedObj.active_shape_key.name == 'Basis':
+                            self.report({'ERROR'}, 'Active shape key is "Basis"')
+                            return {'CANCELLED'}
+                        selectedObj.active_shape_key.data[selectedV.index].co = [localPos[0], localPos[1], localPos[2]]
 
                 bpy.ops.object.editmode_toggle()
 
@@ -64,8 +65,6 @@ class CopyAndPasteVertex(bpy.types.Operator):
             selectedVertices = [v for v in bpy.context.object.data.vertices if v.select]
             if len(selectedVertices) <= 1:
                 return {'FINISHED'}
-            
-            print(selectedVertices)
 
             # TODO: 選択順は関係ない
             firstSelectedIndex = selectedVertices[0].index
