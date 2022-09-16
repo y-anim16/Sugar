@@ -1,1 +1,1 @@
-xcopy ..\Addons ..\BLENDER_SCRIPTS_LOCATION /Y
+xcopy ..\Addons ..\BLENDER_SCRIPTS_LOCATION /EXCLUDE:excludelist.txt /Y 
