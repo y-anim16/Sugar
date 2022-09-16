@@ -52,7 +52,10 @@ class CopyAndPasteVertex(bpy.types.Operator):
                 bpy.ops.object.editmode_toggle()
                 
                 for selectedV in [v for v in selectedObj.data.vertices if v.select]:
-                    selectedV.co = [localPos[0], localPos[1], localPos[2]]
+                    # selectedV.co = [localPos[0], localPos[1], localPos[2]]
+                    selectedObj.active_shape_key.data[selectedV.index].co = [localPos[0], localPos[1], localPos[2]]
+                    #selectedV.co = [localPos[0], localPos[1], localPos[2]]
+
 
                 bpy.ops.object.editmode_toggle()
 
