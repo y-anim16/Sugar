@@ -62,6 +62,31 @@ class AddShowHideKeyFrame(bpy.types.Operator):
         print('finished')
         return {'FINISHED'}
 
+class ToggleMultiresShowViewport(bpy.types.Operator):
+    bl_idname = "object.toggle_multires_show_viewport"
+    bl_label = "ToggleMultiresShowViewport"
+    bl_description = "指定オブジェクトのMultiresolution Viewport設定を変更します"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        #プロジェクトによってオブジェクト名を変更する
+        # ゆくゆくはエディタ上で変更したい     
+        ObjName = 'Body'
+
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        print(bpy.context.scene.objects)
+
+        if (ObjName in bpy.context.scene.objects.keys()) == False:
+            self.report({'ERROR'}, 'Change scripts ObjName')
+            return {'CANCELLED'}
+
+        bpy.ops.object.select_all(action = 'DESELECT')
+        bpy.context.view_layer.objects.active = bpy.data.objects[ObjName]
+        bpy.context.active_object.modifiers["Multires"].show_viewport ^= True
+
+        return {'FINISHED'}
+
 #TODO Add new command class.
 class NEW_COMMAND_CLASS(bpy.types.Operator):
     bl_idname = "object.new_command"
@@ -93,6 +118,9 @@ class BerriesUi(bpy.types.Panel):
             op_cls = AddShowHideKeyFrame
             layout.operator(op_cls.bl_idname, text = "Add Show/Hide key frame")
 
+        op_cls = ToggleMultiresShowViewport
+        layout.operator(op_cls.bl_idname, text = "Toggle multires show viewport")
+
         #TODO ここで新しいコマンドのボタン登録
         #op_cls = NEW_CLASS_NAME
         #layout.operator(op_cls.bl_idname, text = "NEW_BUTTON_NAME")
@@ -101,6 +129,7 @@ class BerriesUi(bpy.types.Panel):
 classes = [
     SetOriginToSelected,
     AddShowHideKeyFrame,
+    ToggleMultiresShowViewport,
 
     #TODO ここで新しく追加したコマンドクラスの登録
     #NEW_CLASS_NAME,
