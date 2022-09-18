@@ -33,20 +33,14 @@ class CopyAndPasteVertex(bpy.types.Operator):
         
 
         activeObj = bpy.context.active_object
-        activeObjVertices = []
-        if activeObj.data.shape_keys == None or activeObj.active_shape_key.name == 'Basis':
-            for selectedV in [v for v in activeObj.data.vertices if v.select]:
-                vInfo = {}
-                vInfo['vertex'] = selectedV
-                vInfo['worldPos'] = activeObj.matrix_world @ selectedV.co
-                activeObjVertices.append(vInfo)
-        else:
-            for selectedV in [v for v in activeObj.data.vertices if v.select]:
-                vInfo = {}
-                vInfo['vertex'] = selectedV
+        activeVWorldPositions = []
+        for selectedV in [v for v in activeObj.data.vertices if v.select]:
+            if activeObj.data.shape_keys == None or activeObj.active_shape_key.name == 'Basis':
+                worldPos = activeObj.matrix_world @ selectedV.co
+            else: # 移動先もシェイプキーによって変形している座標
                 activeShapeKeyV = activeObj.active_shape_key.data[selectedV.index]
-                vInfo['worldPos'] = activeObj.matrix_world @ activeShapeKeyV.co
-                activeObjVertices.append(vInfo)
+                worldPos = activeObj.matrix_world @ activeShapeKeyV.co
+        activeVWorldPositions.append(worldPos)
 
 
         # 複数のメッシュ
@@ -55,7 +49,7 @@ class CopyAndPasteVertex(bpy.types.Operator):
                 if selectedObj == activeObj:
                     continue
 
-                localPos = selectedObj.matrix_world.inverted() @ activeObjVertices[0]['worldPos']
+                localPos = selectedObj.matrix_world.inverted() @ activeVWorldPositions[0]
                 bpy.ops.object.editmode_toggle()
                 
                 for selectedV in [v for v in selectedObj.data.vertices if v.select]:
