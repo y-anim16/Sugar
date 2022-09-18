@@ -34,11 +34,20 @@ class CopyAndPasteVertex(bpy.types.Operator):
 
         activeObj = bpy.context.active_object
         activeObjVertices = []
-        for selectedV in [v for v in activeObj.data.vertices if v.select]:
-            vInfo = {}
-            vInfo['vertex'] = selectedV
-            vInfo['worldPos'] = activeObj.matrix_world @ selectedV.co
-            activeObjVertices.append(vInfo)
+        if activeObj.data.shape_keys == None or activeObj.active_shape_key.name == 'Basis':
+            for selectedV in [v for v in activeObj.data.vertices if v.select]:
+                vInfo = {}
+                vInfo['vertex'] = selectedV
+                vInfo['worldPos'] = activeObj.matrix_world @ selectedV.co
+                activeObjVertices.append(vInfo)
+        else:
+            for selectedV in [v for v in activeObj.data.vertices if v.select]:
+                vInfo = {}
+                vInfo['vertex'] = selectedV
+                activeShapeKeyV = activeObj.active_shape_key.data[selectedV.index]
+                vInfo['worldPos'] = activeObj.matrix_world @ activeShapeKeyV.co
+                activeObjVertices.append(vInfo)
+
 
         # 複数のメッシュ
         if len(bpy.context.selected_objects) > 1:
