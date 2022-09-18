@@ -31,7 +31,6 @@ class CopyAndPasteVertex(bpy.types.Operator):
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.editmode_toggle() #編集モードに戻す
         
-
         activeObj = bpy.context.active_object
         activeVWorldPositions = []
         for selectedV in [v for v in activeObj.data.vertices if v.select]:
@@ -40,25 +39,28 @@ class CopyAndPasteVertex(bpy.types.Operator):
             else: # 移動先もシェイプキーによって変形している座標
                 activeShapeKeyV = activeObj.active_shape_key.data[selectedV.index]
                 worldPos = activeObj.matrix_world @ activeShapeKeyV.co
-        activeVWorldPositions.append(worldPos)
-
+            activeVWorldPositions.append(worldPos)
 
         # 複数のメッシュ
         if len(bpy.context.selected_objects) > 1:
             for selectedObj in bpy.context.selected_objects:
                 if selectedObj == activeObj:
                     continue
-
-                localPos = selectedObj.matrix_world.inverted() @ activeVWorldPositions[0]
                 bpy.ops.object.editmode_toggle()
                 
-                for selectedV in [v for v in selectedObj.data.vertices if v.select]:
+                for i, selectedV in enumerate([v for v in selectedObj.data.vertices if v.select]):
                     if selectedObj.data.shape_keys == None:
+                        localPos = selectedObj.matrix_world.inverted() @ activeVWorldPositions[0]
                         selectedV.co = [localPos[0], localPos[1], localPos[2]]
                     else:
                         if selectedObj.active_shape_key.name == 'Basis':
                             self.report({'ERROR'}, 'Active shape key is "Basis"')
                             return {'CANCELLED'}
+                        if len(activeVWorldPositions) > 1:
+                            # 必ずしも想定通りの向きになるとは限らないので適用させる頂点を変えられるようにする必要がある
+                            localPos = selectedObj.matrix_world.inverted() @ activeVWorldPositions[i]
+                        else:
+                            localPos = selectedObj.matrix_world.inverted() @ activeVWorldPositions[0]
                         selectedObj.active_shape_key.data[selectedV.index].co = [localPos[0], localPos[1], localPos[2]]
 
                 bpy.ops.object.editmode_toggle()
