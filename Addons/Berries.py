@@ -87,6 +87,19 @@ class ToggleMultiresShowViewport(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class BakePhysicsSimulation(bpy.types.Operator):
+    bl_idname = "object.bake_physics_simulation"
+    bl_label = "BakePhysicsSimulation"
+    bl_description = "物理シミュレーションのキャッシュを削除して、ベイクします"
+    #bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        bpy.ops.ptcache.free_bake_all()
+        bpy.ops.ptcache.bake_all(bake=True)
+
+        return {'FINISHED'}
+
+
 #TODO Add new command class.
 class NEW_COMMAND_CLASS(bpy.types.Operator):
     bl_idname = "object.new_command"
@@ -121,6 +134,9 @@ class BerriesUi(bpy.types.Panel):
         op_cls = ToggleMultiresShowViewport
         layout.operator(op_cls.bl_idname, text = "Toggle multires show viewport")
 
+        op_cls = BakePhysicsSimulation
+        layout.operator(op_cls.bl_idname, text = "Bake physics simulation")
+
         #TODO ここで新しいコマンドのボタン登録
         #op_cls = NEW_CLASS_NAME
         #layout.operator(op_cls.bl_idname, text = "NEW_BUTTON_NAME")
@@ -130,6 +146,7 @@ classes = [
     SetOriginToSelected,
     AddShowHideKeyFrame,
     ToggleMultiresShowViewport,
+    BakePhysicsSimulation,
 
     #TODO ここで新しく追加したコマンドクラスの登録
     #NEW_CLASS_NAME,
