@@ -108,7 +108,9 @@ class SwitchBoneHide(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
+        bpy.ops.object.posemode_toggle()
         bpy.context.active_bone.hide = (bpy.context.active_bone.hide == False)
+        bpy.ops.object.editmode_toggle()
         
         return {'FINISHED'}
 
