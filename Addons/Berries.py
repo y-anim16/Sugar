@@ -14,6 +14,8 @@ bl_info = {
     "category": "All"
 }
 
+addon_keymaps = []
+
 class SetOriginToSelected(bpy.types.Operator):
     bl_idname = "object.set_origin_to_selected"
     bl_label = "SetOriginToSelected"
@@ -99,6 +101,17 @@ class BakePhysicsSimulation(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class SwitchBoneHide(bpy.types.Operator):
+    bl_idname = "object.switch_bone_hide"
+    bl_label = "SwitchBoneHide"
+    bl_description = "選択しているBoneの表示/非表示切り替えを行います"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        bpy.context.active_bone.hide = (bpy.context.active_bone.hide == False)
+        
+        return {'FINISHED'}
+
 
 #TODO Add new command class.
 class NEW_COMMAND_CLASS(bpy.types.Operator):
@@ -131,6 +144,10 @@ class BerriesUi(bpy.types.Panel):
             op_cls = AddShowHideKeyFrame
             layout.operator(op_cls.bl_idname, text = "Add Show/Hide key frame")
 
+        if bpy.context.mode == 'EDIT_ARMATURE':
+            op_cls = SwitchBoneHide
+            layout.operator(op_cls.bl_idname, text = "Switch bone hide")
+
         op_cls = ToggleMultiresShowViewport
         layout.operator(op_cls.bl_idname, text = "Toggle multires show viewport")
 
@@ -147,6 +164,7 @@ classes = [
     AddShowHideKeyFrame,
     ToggleMultiresShowViewport,
     BakePhysicsSimulation,
+    SwitchBoneHide,
 
     #TODO ここで新しく追加したコマンドクラスの登録
     #NEW_CLASS_NAME,
@@ -154,11 +172,33 @@ classes = [
     BerriesUi
 ]
 
+def register_shortcut():
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    if kc:
+        km = kc.keymaps.new(name="3D View", space_type="VIEW_3D")
+        kmi = km.keymap_items.new(
+            idname = SwitchBoneHide.bl_idname,
+            type = 'H',
+            value = 'PRESS',
+            shift = False,
+            ctrl = True,
+            alt = False
+        )
+        addon_keymaps.append((km,kmi))
+
+def unregister_shortcut():
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
+    register_shortcut()
 
 def unregister():
+    unregister_shortcut()
     for c in classes:
         bpy.utils.unregister_class(c)
 
