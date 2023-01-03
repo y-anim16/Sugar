@@ -77,6 +77,66 @@ class CopyLocationBC(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class CopyRotationBC(bpy.types.Operator):
+    bl_idname = "object.copy_rotation_bc"
+    bl_label = "CopyRotationBC"
+    bl_description = "copy_rotation_bc"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        selectedObj = bpy.context.active_object
+        selectedBone = bpy.context.selected_pose_bones[0]
+        bpy.ops.object.posemode_toggle()
+
+        # Empty生成
+        bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+        
+        # ボーンコンストレイント設定
+        bpy.ops.object.constraint_add(type='COPY_ROTATION')
+        bpy.context.object.constraints["Copy Rotation"].target = selectedObj
+        bpy.context.object.constraints["Copy Rotation"].subtarget = selectedBone.name
+        
+        # Bake action (obj)
+        frameStart = bpy.context.scene.frame_start
+        frameEnd = bpy.context.scene.frame_end
+        bpy.ops.nla.bake(frame_start=frameStart, frame_end=frameEnd, visual_keying=True, clear_constraints=True, bake_types={'OBJECT'})
+        
+        # Emptyを非選択にし、選択していたボーンをアクティブにする
+        emptyObj = bpy.context.object
+        emptyObj.select_set(False)
+        selectedObj.select_set(True)
+        bpy.context.view_layer.objects.active = selectedObj
+        bpy.ops.object.posemode_toggle()
+
+        # 選択していたボーンにBC設定
+        bpy.ops.pose.constraint_add(type='COPY_ROTATION')
+        selectedBone.constraints["Copy Rotation"].target = emptyObj
+
+        # Bake action (bone)
+        # bpy.ops.nla.bake(frame_start=frameStart, frame_end=frameEnd, visual_keying=True, clear_constraints=True, use_current_action=True, bake_types={'POSE'})
+
+        # Emptyに選択を戻す
+        bpy.ops.object.posemode_toggle()
+        bpy.context.object.select_set(False)
+        emptyObj.select_set(True)
+        bpy.context.view_layer.objects.active = emptyObj
+
+        # Cycle作成
+        area = bpy.context.area
+        old_type = area.type
+        area.type = 'GRAPH_EDITOR'
+        bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
+        area.type = old_type
+
+        # bpy.ops.object.delete(use_global=False, confirm=False)
+
+        # 選択状態をもとに戻す
+        # selectedObj.select_set(True)
+        # bpy.context.view_layer.objects.active = selectedObj
+        # bpy.ops.object.posemode_toggle()
+
+        return {'FINISHED'}
+
 class QuickBC_PieMenu(Menu):
     bl_idname = "object.quick_bc_pie"
     bl_label = "quick_bc"
@@ -85,6 +145,7 @@ class QuickBC_PieMenu(Menu):
         layout = self.layout
         pie = layout.menu_pie()
         pie.operator("object.copy_location_bc", text = "CopyLocation")
+        pie.operator("object.copy_rotation_bc", text = "CopyRotation")
         
 class CallQuickBCPieMenu(bpy.types.Operator):
     bl_idname = "object.quick_bc_caller"
@@ -98,6 +159,7 @@ class CallQuickBCPieMenu(bpy.types.Operator):
 
 classes = {
     CopyLocationBC,
+    CopyRotationBC,
     QuickBC_PieMenu,
     CallQuickBCPieMenu
 }
