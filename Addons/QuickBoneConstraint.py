@@ -60,6 +60,14 @@ class CopyLocationBC(bpy.types.Operator):
         bpy.context.object.select_set(False)
         emptyObj.select_set(True)
         bpy.context.view_layer.objects.active = emptyObj
+
+        # Cycle作成
+        area = bpy.context.area
+        old_type = area.type
+        area.type = 'GRAPH_EDITOR'
+        bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
+        area.type = old_type
+
         # bpy.ops.object.delete(use_global=False, confirm=False)
 
         # 選択状態をもとに戻す
